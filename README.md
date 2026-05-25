@@ -369,6 +369,29 @@ Tehnike sa predmeta koristićemo ovako:
   - iz uzrasta i respiratorne frekvence izvodi se `TachypneaDetected`;
   - iz saturacije i kliničkog konteksta izvodi se `OxygenationConcern`;
   - iz više izvedenih činjenica izvodi se `ClinicalReviewNeeded` ili `UrgentReferralNeeded`.
+    
+  Layer 1: Profil deteta (statične činjenice)
+   Uzrast deteta (u mesecima/godinama)
+   Prisutnost komorbiditeta (hronična bolest, prematuritet…)
+  Layer 2: Događaji i simptomi (dinamički ulazi)
+   Respiratorna frekvenca (broj udisaja/min)
+   Saturacija kiseonika (%)
+   Nazalno širenje, uvlačenje grudnog koša
+   Unos tečnosti
+  Layer 3: Izvedene činjenice i kliničke klasifikacije
+   TachypneaDetected (prepoznata tahipneja na osnovu uzrasta i frekvence)
+   OxygenationConcern (problem sa oksigenacijom)
+   ClinicalReviewNeeded (potreba za pregledom)
+
+  Pravila (FC):
+   Ako uzrast deteta je 2–11 meseci i respiratorna frekvenca je ≥ 50/min
+   Onda postavi TachypneaDetected.
+   Ako uzrast deteta je 1–5 godina i respiratorna frekvenca je ≥ 40/min
+   Onda postavi TachypneaDetected.
+   Ako saturacija ≤ 95% i postoji febrilitet ili respiratorni simptomi
+   Onda postavi OxygenationConcern.
+   Ako postoji TachypneaDetected ili OxygenationConcern ili ozbiljan simptom (nazalno širenje, uvlačenje grudnog koša, loš unos tečnosti)
+   Onda postavi ClinicalReviewNeeded.
 
 - **Backward chaining (BC) / queries**  
    Koristi se kada sistem ili korisnik želi odgovor na konkretno pitanje i objašnjenje uslova. Primeri:

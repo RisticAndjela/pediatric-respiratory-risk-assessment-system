@@ -18,6 +18,8 @@ import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -94,17 +96,17 @@ public class DesktopApp {
         ageField = new JTextField("10");
         rr1Field = new JTextField("54");
         spo21Field = new JTextField("95");
-        chest1Box = new JCheckBox("Chest indrawing event 1", true);
-        grunting1Box = new JCheckBox("Grunting event 1", false);
-        apnea1Box = new JCheckBox("Apnea event 1", false);
-        cyanosis1Box = new JCheckBox("Cyanosis event 1", false);
+        chest1Box = new JCheckBox("Chest indrawing - earlier assessment", true);
+        grunting1Box = new JCheckBox("Grunting - earlier assessment", false);
+        apnea1Box = new JCheckBox("Apnea - earlier assessment", false);
+        cyanosis1Box = new JCheckBox("Cyanosis - earlier assessment", false);
 
         rr2Field = new JTextField("58");
         spo22Field = new JTextField("94");
-        chest2Box = new JCheckBox("Chest indrawing event 2", true);
-        grunting2Box = new JCheckBox("Grunting event 2", true);
-        apnea2Box = new JCheckBox("Apnea event 2", false);
-        cyanosis2Box = new JCheckBox("Cyanosis event 2", false);
+        chest2Box = new JCheckBox("Chest indrawing - current assessment", true);
+        grunting2Box = new JCheckBox("Grunting - current assessment", true);
+        apnea2Box = new JCheckBox("Apnea - current assessment", false);
+        cyanosis2Box = new JCheckBox("Cyanosis - current assessment", false);
 
         intakeField = new JTextField("60");
         poorFeedingBox = new JCheckBox("Poor feeding", true);
@@ -122,10 +124,10 @@ public class DesktopApp {
 
         addRow(formPanel, "Child ID", childIdField);
         addRow(formPanel, "Age in months", ageField);
-        addRow(formPanel, "Event 1 RR (breaths/min)", rr1Field);
-        addRow(formPanel, "Event 1 SpO2", spo21Field);
-        addRow(formPanel, "Event 2 RR (breaths/min)", rr2Field);
-        addRow(formPanel, "Event 2 SpO2", spo22Field);
+        addRow(formPanel, "Earlier assessment - RR (breaths/min)", rr1Field);
+        addRow(formPanel, "Earlier assessment - SpO2", spo21Field);
+        addRow(formPanel, "Current assessment - RR (breaths/min)", rr2Field);
+        addRow(formPanel, "Current assessment - SpO2", spo22Field);
         addRow(formPanel, "Hydration intake %", intakeField);
         addRow(formPanel, "Input model", modelSelector);
         addRow(formPanel, "Session mode", sessionModeSelector);
@@ -350,6 +352,7 @@ public class DesktopApp {
         try {
             String output = runRulesForMode(c);
             outputArea.setText(output);
+            showStyledResultDialog(c.childId, output);
             runHistory.computeIfAbsent(selectedId, id -> new ArrayList<>())
                     .add(LocalDateTime.now() + "\n" + output);
         } catch (Exception ex) {
@@ -613,6 +616,198 @@ public class DesktopApp {
             }
         }
         return count;
+    }
+
+    private void showStyledResultDialog(Long childId, String output) {
+        JDialog dialog = new JDialog((JFrame) SwingUtilities.getWindowAncestor(outputArea), "Defense View - Patient " + childId, true);
+        dialog.setSize(980, 760);
+        dialog.setLocationRelativeTo(outputArea);
+
+        JEditorPane editorPane = new JEditorPane("text/html", buildStyledHtmlReport(output));
+        editorPane.setEditable(false);
+        editorPane.setCaretPosition(0);
+
+        JScrollPane scrollPane = new JScrollPane(editorPane);
+        scrollPane.setBorder(new TitledBorder("Styled Rule Report"));
+        dialog.add(scrollPane);
+        dialog.setVisible(true);
+    }
+
+    private String buildStyledHtmlReport(String output) {
+        String[] blocks = output.split("\\n\\n========================================\\n\\n");
+        StringBuilder html = new StringBuilder();
+        html.append("<html><body style='font-family:Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#1f2937;margin:18px;'>");
+        html.append("<div style='font-size:26px;font-weight:bold;color:#0f172a;margin-bottom:14px;'>Rule Engine Defense View</div>");
+
+        for (String block : blocks) {
+            html.append(renderSessionBlock(block));
+        }
+
+        html.append("</body></html>");
+        return html.toString();
+    }
+
+    private String renderSessionBlock(String block) {
+        String[] lines = block.split("\\R");
+        String title = lines.length > 0 ? escapeHtml(lines[0]) : "Session";
+        List<String> summaryLines = new ArrayList<>();
+        List<String> activatedRules = new ArrayList<>();
+        List<String> derivedFacts = new ArrayList<>();
+        List<String> finalDecision = new ArrayList<>();
+        List<String> queries = new ArrayList<>();
+
+        String currentSection = "summary";
+        for (int i = 1; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+            if ("Activated rules".equals(line)) {
+                currentSection = "rules";
+                continue;
+            }
+            if ("Derived facts".equals(line)) {
+                currentSection = "facts";
+                continue;
+            }
+            if ("Final decision".equals(line)) {
+                currentSection = "decision";
+                continue;
+            }
+            if ("Queries".equals(line)) {
+                currentSection = "queries";
+                continue;
+            }
+
+            if ("summary".equals(currentSection)) {
+                summaryLines.add(line);
+            } else if ("rules".equals(currentSection)) {
+                activatedRules.add(stripBullet(line));
+            } else if ("facts".equals(currentSection)) {
+                derivedFacts.add(stripBullet(line));
+            } else if ("decision".equals(currentSection)) {
+                finalDecision.add(stripBullet(line));
+            } else if ("queries".equals(currentSection)) {
+                queries.add(line);
+            }
+        }
+
+        StringBuilder section = new StringBuilder();
+        section.append("<div style='border:2px solid #cbd5e1;border-radius:18px;background:#ffffff;padding:18px;margin-bottom:18px;'>");
+        section.append("<div style='font-size:24px;font-weight:bold;color:#1d4ed8;margin-bottom:10px;'>").append(title).append("</div>");
+        section.append(renderSummaryCard(summaryLines));
+        section.append(renderOrderedCard("Activated Rules", activatedRules, "#dbeafe", "#1d4ed8", true));
+        section.append(renderOrderedCard("Derived Facts", derivedFacts, "#dcfce7", "#15803d", false));
+        section.append(renderDecisionCard(finalDecision));
+        section.append(renderQueryCard(queries));
+        section.append("</div>");
+        return section.toString();
+    }
+
+    private String renderSummaryCard(List<String> lines) {
+        StringBuilder html = new StringBuilder();
+        html.append("<div style='border:1px solid #bfdbfe;background:#eff6ff;border-radius:14px;padding:12px 14px;margin-bottom:14px;'>");
+        html.append("<div style='font-size:18px;font-weight:bold;color:#1e3a8a;margin-bottom:6px;'>Summary</div>");
+        for (String line : lines) {
+            html.append("<div style='margin:4px 0;'><b>").append(highlightKeyValue(line)).append("</b></div>");
+        }
+        html.append("</div>");
+        return html.toString();
+    }
+
+    private String renderOrderedCard(String title, List<String> items, String bgColor, String titleColor, boolean italic) {
+        StringBuilder html = new StringBuilder();
+        html.append("<div style='border:1px solid ").append(titleColor).append(";background:").append(bgColor)
+                .append(";border-radius:14px;padding:12px 14px;margin-bottom:14px;'>");
+        html.append("<div style='font-size:18px;font-weight:bold;color:").append(titleColor).append(";margin-bottom:8px;'>")
+                .append(escapeHtml(title)).append("</div>");
+        html.append("<ol style='margin:0;padding-left:24px;'>");
+        for (String item : items) {
+            html.append("<li style='margin:6px 0;");
+            if (italic) {
+                html.append("font-style:italic;");
+            }
+            html.append("'><b>").append(escapeHtml(item)).append("</b></li>");
+        }
+        html.append("</ol></div>");
+        return html.toString();
+    }
+
+    private String renderDecisionCard(List<String> decisions) {
+        StringBuilder html = new StringBuilder();
+        html.append("<div style='border:2px solid #f59e0b;background:#fffbeb;border-radius:14px;padding:12px 14px;margin-bottom:14px;'>");
+        html.append("<div style='font-size:18px;font-weight:bold;color:#b45309;margin-bottom:8px;'>Final Decision</div>");
+        for (String decision : decisions) {
+            html.append("<div style='margin:8px 0;padding:10px;border-radius:10px;background:#ffffff;border:1px solid #fcd34d;'>");
+            html.append("<span style='color:#92400e;font-weight:bold;font-size:15px;'>").append(escapeHtml(decision)).append("</span>");
+            html.append("</div>");
+        }
+        html.append("</div>");
+        return html.toString();
+    }
+
+    private String renderQueryCard(List<String> lines) {
+        StringBuilder html = new StringBuilder();
+        html.append("<div style='border:1px solid #c084fc;background:#faf5ff;border-radius:14px;padding:12px 14px;'>");
+        html.append("<div style='font-size:18px;font-weight:bold;color:#7e22ce;margin-bottom:8px;'>Queries</div>");
+
+        String currentHeader = null;
+        List<String> currentItems = new ArrayList<>();
+        for (String line : lines) {
+            boolean isHeader = !line.startsWith("-") && !line.startsWith("rows:");
+            if (isHeader) {
+                if (currentHeader != null) {
+                    appendQuerySection(html, currentHeader, currentItems);
+                    currentItems.clear();
+                }
+                currentHeader = line;
+            } else {
+                currentItems.add(line);
+            }
+        }
+        if (currentHeader != null) {
+            appendQuerySection(html, currentHeader, currentItems);
+        }
+
+        html.append("</div>");
+        return html.toString();
+    }
+
+    private void appendQuerySection(StringBuilder html, String header, List<String> items) {
+        html.append("<div style='margin:10px 0 14px 0;padding:10px;border-radius:10px;background:#ffffff;border:1px solid #e9d5ff;'>");
+        html.append("<div style='font-weight:bold;color:#6b21a8;margin-bottom:6px;'>").append(escapeHtml(header)).append("</div>");
+        if (items.isEmpty()) {
+            html.append("<div style='color:#64748b;'><i>No rows</i></div>");
+        } else {
+            for (String item : items) {
+                html.append("<div style='margin:4px 0;color:#334155;'>").append(escapeHtml(item)).append("</div>");
+            }
+        }
+        html.append("</div>");
+    }
+
+    private String stripBullet(String line) {
+        if (line.startsWith("- ")) {
+            return line.substring(2);
+        }
+        return line;
+    }
+
+    private String highlightKeyValue(String line) {
+        int separator = line.indexOf(':');
+        if (separator < 0) {
+            return escapeHtml(line);
+        }
+        String key = escapeHtml(line.substring(0, separator));
+        String value = escapeHtml(line.substring(separator + 1).trim());
+        return "<span style='color:#1e3a8a;'>" + key + ":</span> <span style='color:#0f172a;font-weight:normal;'>" + value + "</span>";
+    }
+
+    private String escapeHtml(String text) {
+        return text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
     }
 
     private static class PatientCase {

@@ -27,7 +27,9 @@ when
       or
       (exists ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH") and exists ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H"))
       or
-      (exists ClinicalSignal(childId == $id, type == "OXYGEN_DROP_TREND_12H") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
+      (exists ClinicalSignal(childId == $id, type == "RAPID_OXYGEN_DROP_2H") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_ESCALATION_6H") and exists ClinicalSignal(childId == $id, type == "HYPOXEMIA_MODERATE"))
     )
     not Recommendation(childId == $id, action == "URGENT_HOSPITAL_ASSESSMENT")
 then
@@ -46,6 +48,10 @@ when
       (exists ClinicalSignal(childId == $id, type == "OXYGEN_MONITOR_ZONE") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
       or
       (exists ClinicalSignal(childId == $id, type == "RR_BORDERLINE") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MILD"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "RAPID_OXYGEN_DROP_2H"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_ESCALATION_6H"))
       or
       (exists ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H"))
     )

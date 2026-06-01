@@ -6,6 +6,8 @@ import com.sbnz.model.HydrationIntakeEvent;
 import com.sbnz.model.Recommendation;
 import com.sbnz.model.RespiratoryAssessmentEvent;
 import com.sbnz.frontend.drools.RespiratoryKieSessionFactory;
+import org.kie.api.event.rule.AfterMatchFiredEvent;
+import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
@@ -41,6 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class DesktopApp {
 
@@ -387,6 +390,13 @@ public class DesktopApp {
 
     private String runRules(PatientCase c) {
         KieSession ksession = RespiratoryKieSessionFactory.createSession();
+        List<String> activatedRules = new ArrayList<>();
+        ksession.addEventListener(new DefaultAgendaEventListener() {
+            @Override
+            public void afterMatchFired(AfterMatchFiredEvent event) {
+                activatedRules.add(event.getMatch().getRule().getName());
+            }
+        });
 
         ChildProfile child = new ChildProfile(c.childId, c.ageInMonths);
         RespiratoryAssessmentEvent first = new RespiratoryAssessmentEvent(c.childId, Date.from(LocalDateTime.now().minusHours(2).atZone(ZoneId.systemDefault()).toInstant()), c.rr1, c.spo21, c.chest1, c.grunting1, c.apnea1, c.cyanosis1);
@@ -401,49 +411,61 @@ public class DesktopApp {
         int fired = ksession.fireAllRules();
 
         StringBuilder out = new StringBuilder();
+        out.append("Summary\n");
+        out.append("patient: ").append(c.childId).append("\n");
         out.append("rules fired: ").append(fired).append("\n\n");
 
-        out.append("clinical signals\n");
+        out.append("Activated rules\n");
+        for (String ruleName : activatedRules) {
+            out.append("- ").append(ruleName).append("\n");
+        }
+
+        out.append("\nDerived facts\n");
         Collection<ClinicalSignal> signals = (Collection<ClinicalSignal>) ksession.getObjects(o -> o instanceof ClinicalSignal);
-        for (ClinicalSignal signal : signals) {
-            out.append("- ").append(signal).append("\n");
+        List<ClinicalSignal> sortedSignals = new ArrayList<>(signals);
+        sortedSignals.sort(Comparator.comparing(ClinicalSignal::getType).thenComparing(ClinicalSignal::getReason));
+        for (ClinicalSignal signal : sortedSignals) {
+            out.append("- ").append(signal.getType()).append(": ").append(signal.getReason()).append("\n");
         }
 
-        out.append("\nrecommendations\n");
+        out.append("\nFinal decision\n");
         Collection<Recommendation> recs = (Collection<Recommendation>) ksession.getObjects(o -> o instanceof Recommendation);
-        for (Recommendation recommendation : recs) {
-            out.append("- ").append(recommendation).append("\n");
+        List<Recommendation> sortedRecommendations = new ArrayList<>(recs);
+        sortedRecommendations.sort(Comparator.comparing(Recommendation::getAction).thenComparing(Recommendation::getExplanation));
+        for (Recommendation recommendation : sortedRecommendations) {
+            out.append("- ").append(recommendation.getAction()).append(": ").append(recommendation.getExplanation()).append("\n");
         }
 
-        out.append("\nquery isSafeForHomeMonitoring\n");
+        out.append("\nQueries\n");
+        out.append("isSafeForHomeMonitoring\n");
         QueryResults safety = ksession.getQueryResults("isSafeForHomeMonitoring", c.childId);
         out.append("rows: ").append(safety.size()).append("\n");
 
-        out.append("\nquery getEscalationReasons\n");
+        out.append("\ngetEscalationReasons\n");
         QueryResults reasons = ksession.getQueryResults("getEscalationReasons", c.childId, Variable.v, Variable.v);
         for (QueryResultsRow row : reasons) {
             out.append("- ").append(row.get("$type")).append(": ").append(row.get("$reason")).append("\n");
         }
 
-        out.append("\nquery getHomeMonitoringBlockers\n");
+        out.append("\ngetHomeMonitoringBlockers\n");
         QueryResults blockers = ksession.getQueryResults("getHomeMonitoringBlockers", c.childId, Variable.v, Variable.v);
         for (QueryResultsRow row : blockers) {
             out.append("- blocker ").append(row.get("$blockerType")).append(": ").append(row.get("$blockerReason")).append("\n");
         }
 
-        out.append("\nquery getRespiratoryCategories\n");
+        out.append("\ngetRespiratoryCategories\n");
         QueryResults respiratoryCats = ksession.getQueryResults("getRespiratoryCategories", c.childId, Variable.v, Variable.v);
         for (QueryResultsRow row : respiratoryCats) {
             out.append("- respiratory ").append(row.get("$type")).append(": ").append(row.get("$reason")).append("\n");
         }
 
-        out.append("\nquery getHydrationCategories\n");
+        out.append("\ngetHydrationCategories\n");
         QueryResults hydrationCats = ksession.getQueryResults("getHydrationCategories", c.childId, Variable.v, Variable.v);
         for (QueryResultsRow row : hydrationCats) {
             out.append("- hydration ").append(row.get("$type")).append(": ").append(row.get("$reason")).append("\n");
         }
 
-        out.append("\nquery getRequiredAction\n");
+        out.append("\ngetRequiredAction\n");
         QueryResults action = ksession.getQueryResults("getRequiredAction", c.childId, Variable.v, Variable.v);
         for (QueryResultsRow row : action) {
             out.append("- action: ").append(row.get("$action")).append(" | explanation: ").append(row.get("$explanation")).append("\n");

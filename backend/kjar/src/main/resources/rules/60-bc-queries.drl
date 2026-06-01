@@ -41,8 +41,11 @@ query "getRespiratoryCategories"(Long $childId, String $type, String $reason)
          $type == "OXYGEN_MONITOR_ZONE" ||
          $type == "HYPOXEMIA_MODERATE" ||
          $type == "HYPOXEMIA_SEVERE" ||
+         $type == "RAPID_OXYGEN_DROP_2H" ||
+         $type == "BREATHING_EFFORT_ESCALATION_6H" ||
          $type == "PERSISTENT_TACHYPNEA_12H" ||
-         $type == "OXYGEN_DROP_TREND_12H")
+         $type == "RESP_DISTRESS_GRUNTING" ||
+         $type == "RESP_DISTRESS_INDRAWING")
 end
 
 query "getHydrationCategories"(Long $childId, String $type, String $reason)
@@ -75,6 +78,9 @@ query "getHomeMonitoringBlockers"(Long $childId, String $blockerType, String $bl
          $blockerType == "HYDRATION_MODERATE" ||
          $blockerType == "HYDRATION_SEVERE" ||
          $blockerType == "EMERGENCY_RED_FLAG" ||
+         $blockerType == "RAPID_OXYGEN_DROP_2H" ||
+         $blockerType == "BREATHING_EFFORT_ESCALATION_6H" ||
          $blockerType == "PERSISTENT_TACHYPNEA_12H" ||
-         $blockerType == "OXYGEN_DROP_TREND_12H")
+         $blockerType == "RESP_DISTRESS_GRUNTING" ||
+         $blockerType == "RESP_DISTRESS_INDRAWING")
 end

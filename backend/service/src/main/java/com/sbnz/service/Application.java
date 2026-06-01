@@ -5,8 +5,7 @@ import com.sbnz.model.ClinicalSignal;
 import com.sbnz.model.HydrationIntakeEvent;
 import com.sbnz.model.Recommendation;
 import com.sbnz.model.RespiratoryAssessmentEvent;
-import org.kie.api.KieServices;
-import org.kie.api.runtime.KieContainer;
+import com.sbnz.service.drools.RespiratoryKieSessionFactory;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
@@ -19,9 +18,7 @@ import java.util.Collection;
 public class Application {
 
     public static void main(String[] args) {
-        KieServices ks = KieServices.Factory.get();
-        KieContainer kc = ks.getKieClasspathContainer();
-        KieSession ksession = kc.newKieSession("homeworkKsession");
+        KieSession ksession = RespiratoryKieSessionFactory.createSession();
 
         // this scenario is simple on purpose so the defense story is clear
         ChildProfile child = new ChildProfile(1L, 10);

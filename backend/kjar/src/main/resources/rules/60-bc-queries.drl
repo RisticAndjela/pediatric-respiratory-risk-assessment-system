@@ -32,7 +32,7 @@ query "hasLowRiskAction"(Long $childId)
 end
 
 query "getRespiratoryCategories"(Long $childId, String $type, String $reason)
-    ClinicalSignal(childId == $childId, $type : type, $reason : reason)
+    ClinicalSignal(childId == $childId, type == $type, reason == $reason)
     eval($type == "RR_BORDERLINE" ||
          $type == "TACHYPNEA" ||
          $type == "TACHYPNEA_SEVERE" ||
@@ -46,21 +46,21 @@ query "getRespiratoryCategories"(Long $childId, String $type, String $reason)
 end
 
 query "getHydrationCategories"(Long $childId, String $type, String $reason)
-    ClinicalSignal(childId == $childId, $type : type, $reason : reason)
+    ClinicalSignal(childId == $childId, type == $type, reason == $reason)
     eval($type == "HYDRATION_MILD" ||
          $type == "HYDRATION_MODERATE" ||
          $type == "HYDRATION_SEVERE")
 end
 
 query "getRiskProfileCategories"(Long $childId, String $type, String $reason)
-    ClinicalSignal(childId == $childId, $type : type, $reason : reason)
+    ClinicalSignal(childId == $childId, type == $type, reason == $reason)
     eval($type == "RISK_PROFILE_HIGH" ||
          $type == "AGE_BAND_2_11" ||
          $type == "AGE_BAND_12_60")
 end
 
 query "getHomeMonitoringBlockers"(Long $childId, String $blockerType, String $blockerReason)
-    ClinicalSignal(childId == $childId, $blockerType : type, $blockerReason : reason)
+    ClinicalSignal(childId == $childId, type == $blockerType, reason == $blockerReason)
     eval($blockerType == "TACHYPNEA" ||
          $blockerType == "TACHYPNEA_SEVERE" ||
          $blockerType == "HYPOXEMIA_MODERATE" ||

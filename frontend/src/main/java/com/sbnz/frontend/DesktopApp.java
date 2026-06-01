@@ -5,8 +5,7 @@ import com.sbnz.model.ClinicalSignal;
 import com.sbnz.model.HydrationIntakeEvent;
 import com.sbnz.model.Recommendation;
 import com.sbnz.model.RespiratoryAssessmentEvent;
-import org.kie.api.KieServices;
-import org.kie.api.runtime.KieContainer;
+import com.sbnz.frontend.drools.RespiratoryKieSessionFactory;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
@@ -387,9 +386,7 @@ public class DesktopApp {
     }
 
     private String runRules(PatientCase c) {
-        KieServices ks = KieServices.Factory.get();
-        KieContainer kc = ks.getKieClasspathContainer();
-        KieSession ksession = kc.newKieSession("homeworkKsession");
+        KieSession ksession = RespiratoryKieSessionFactory.createSession();
 
         ChildProfile child = new ChildProfile(c.childId, c.ageInMonths);
         RespiratoryAssessmentEvent first = new RespiratoryAssessmentEvent(c.childId, Date.from(LocalDateTime.now().minusHours(2).atZone(ZoneId.systemDefault()).toInstant()), c.rr1, c.spo21, c.chest1, c.grunting1, c.apnea1, c.cyanosis1);

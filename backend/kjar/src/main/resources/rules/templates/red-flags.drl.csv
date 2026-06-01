@@ -5,7 +5,7 @@ Import,com.sbnz.model.Recommendation
 Import,com.sbnz.model.RespiratoryAssessmentEvent
 
 RuleTable,RedFlagTemplate
-NAME,CONDITION,ACTION,ACTION
+NAME,CONDITION,CONDITION,ACTION,ACTION
 , $c : ChildProfile($id : childId), RespiratoryAssessmentEvent(childId == $id, @{EVENT_CONDITION}), insert(new ClinicalSignal($id, "EMERGENCY_RED_FLAG", "@{REASON}")), insert(new Recommendation($id, "EMERGENCY_RESPONSE", "@{ACTION_TEXT}"))
 "Red flag apnea", apnea == true,apnea detected,apnea requires emergency response
 "Red flag cyanosis", cyanosis == true,central cyanosis detected,cyanosis requires emergency response

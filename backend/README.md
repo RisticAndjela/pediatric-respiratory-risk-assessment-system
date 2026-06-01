@@ -1,52 +1,84 @@
 # homework iii backend
 
-this backend follows the exercise style with model kjar service modules
+this backend follows the exercise structure with `model`, `kjar`, and `service` modules.
 
 ## what is implemented
 
-- class diagram: `CLASS_DIAGRAM.md`
-- data model in `model` module
-- 4 forward chaining rules in `kjar/src/main/resources/rules/homework-rules.drl`
-- 3 backward chaining queries in the same drl file
+- class diagram: `class_diagram.png`
+- data model in the `model` module
+- forward chaining rules split by responsibility:
+  - `10-triage-rules.drl`
+  - `20-vitals-rules.drl`
+  - `30-hydration-rules.drl`
+  - `50-final-decision-rules.drl`
+- complex event processing rules in `40-cep-rules.drl`
+- backward chaining queries in `60-bc-queries.drl`
+- event declaration for stream processing in `00-event-declarations.drl`
+- template-driven rule generation from:
+  - `rules/templates/age-thresholds.template`
+  - `rules/templates/red-flags.template`
 - rule activation and output printing in `service/src/main/java/com/sbnz/service/Application.java`
 
-## rules
+## rule groups
 
-1. detect tachypnea by age
-2. detect oxygen concern
-3. detect breathing effort concern
-4. combine respiratory and hydration concerns into urgent recommendation
+### forward chaining
 
-## queries
+- triage age-band and high-risk profile detection
+- age-adjusted tachypnea and severe tachypnea
+- oxygen monitor and hypoxemia detection
+- breathing effort and hydration concern detection
+- final recommendation generation
 
-- isSafeForHomeMonitoring
-- getEscalationReasons
-- getRequiredAction
+### cep
+
+- rapid oxygen drop within `2h`
+- breathing effort escalation within `6h`
+- persistent tachypnea within `12h`
+
+### backward chaining queries
+
+- `isSafeForHomeMonitoring`
+- `getEscalationReasons`
+- `getRequiredAction`
+- `getHomeMonitoringBlockers`
+- category queries for respiratory, hydration, and risk-profile signals
+
+### templates
+
+templates generate additional rule instances for:
+
+- age-specific respiratory thresholds
+- red-flag findings and emergency escalation
+
+template-generated signals are intentionally kept visible in the output so the template mechanism can be demonstrated during defense.
 
 ## run
 
-from project root
+from repository root:
 
 ```bash
-mvn -pl service -am compile
+cd backend
+mvn -U clean install
 mvn -pl service -am exec:java -Dexec.mainClass=com.sbnz.service.Application
 ```
 
-if your machine does not have maven in path run the same commands with your installed maven binary
+if maven is not available in `PATH`, run the same commands with your installed maven binary.
 
 ## desktop frontend app
 
-there is now a `frontend` module with a clickable desktop tester for multiple patients.
+there is also a `frontend` module with an interactive desktop tester.
 
-run it from backend root:
+from repository root:
 
 ```bash
-mvn -pl frontend -am compile
-mvn -pl frontend -am exec:java -Dexec.mainClass=com.sbnz.frontend.DesktopApp
+cd frontend
+mvn clean compile exec:java -Dexec.mainClass=com.sbnz.frontend.DesktopApp
 ```
 
-what you can do in the app:
-- save multiple patients
-- click patient id from the list to load data
-- choose input model preset (standard, conservative, high-risk)
-- run rules and see signals, recommendation, and query output
+the app supports:
+
+- saving multiple patients
+- loading patient data from the list
+- choosing input presets
+- comparing fresh and learned session execution
+- viewing activated rules, derived facts, final decisions, and query results

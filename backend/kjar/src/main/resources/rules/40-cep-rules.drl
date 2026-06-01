@@ -9,9 +9,21 @@ salience 120
 when
     $c : ChildProfile($id : childId, $age : ageInMonths)
     $e1 : RespiratoryAssessmentEvent(childId == $id,
-        (($age <= 11 && respiratoryRate >= 50) || ($age >= 12 && respiratoryRate >= 40)))
+        ((($age >= 2 && $age <= 3) && respiratoryRate >= 50) ||
+         (($age >= 4 && $age <= 5) && respiratoryRate >= 50) ||
+         (($age >= 6 && $age <= 11) && respiratoryRate >= 50) ||
+         (($age >= 12 && $age <= 18) && respiratoryRate >= 40) ||
+         (($age >= 19 && $age <= 24) && respiratoryRate >= 40) ||
+         (($age >= 25 && $age <= 36) && respiratoryRate >= 40) ||
+         (($age >= 37 && $age <= 60) && respiratoryRate >= 40)))
     $e2 : RespiratoryAssessmentEvent(this != $e1, childId == $id,
-        (($age <= 11 && respiratoryRate >= 50) || ($age >= 12 && respiratoryRate >= 40)),
+        ((($age >= 2 && $age <= 3) && respiratoryRate >= 50) ||
+         (($age >= 4 && $age <= 5) && respiratoryRate >= 50) ||
+         (($age >= 6 && $age <= 11) && respiratoryRate >= 50) ||
+         (($age >= 12 && $age <= 18) && respiratoryRate >= 40) ||
+         (($age >= 19 && $age <= 24) && respiratoryRate >= 40) ||
+         (($age >= 25 && $age <= 36) && respiratoryRate >= 40) ||
+         (($age >= 37 && $age <= 60) && respiratoryRate >= 40)),
         this after[0s,12h] $e1)
     not ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H")
 then

@@ -12,20 +12,65 @@ then
     insert(new ClinicalSignal($id, "RISK_PROFILE_HIGH", "young infant under 3 months"));
 end
 
-rule "triage categorize age band 2-11"
+rule "triage categorize age band 2-3"
 salience 90
 when
-    $c : ChildProfile($id : childId, ageInMonths >= 2 && ageInMonths <= 11)
-    not ClinicalSignal(childId == $id, type == "AGE_BAND_2_11")
+    $c : ChildProfile($id : childId, ageInMonths >= 2 && ageInMonths <= 3)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_2_3_MONTHS")
 then
-    insert(new ClinicalSignal($id, "AGE_BAND_2_11", "age band is 2-11 months"));
+    insert(new ClinicalSignal($id, "AGE_BAND_2_3_MONTHS", "age band is 2-3 months"));
 end
 
-rule "triage categorize age band 12-60"
+rule "triage categorize age band 4-5"
 salience 90
 when
-    $c : ChildProfile($id : childId, ageInMonths >= 12 && ageInMonths <= 60)
-    not ClinicalSignal(childId == $id, type == "AGE_BAND_12_60")
+    $c : ChildProfile($id : childId, ageInMonths >= 4 && ageInMonths <= 5)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_4_5_MONTHS")
 then
-    insert(new ClinicalSignal($id, "AGE_BAND_12_60", "age band is 12-60 months"));
+    insert(new ClinicalSignal($id, "AGE_BAND_4_5_MONTHS", "age band is 4-5 months"));
+end
+
+rule "triage categorize age band 6-11"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 6 && ageInMonths <= 11)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_6_11_MONTHS")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_6_11_MONTHS", "age band is 6-11 months"));
+end
+
+rule "triage categorize age band 12-18"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 12 && ageInMonths <= 18)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_12_18_MONTHS")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_12_18_MONTHS", "age band is 12-18 months"));
+end
+
+rule "triage categorize age band 19-24"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 19 && ageInMonths <= 24)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_19_24_MONTHS")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_19_24_MONTHS", "age band is 19-24 months"));
+end
+
+rule "triage categorize age band 25-36"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 25 && ageInMonths <= 36)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_25_36_MONTHS")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_25_36_MONTHS", "age band is 25-36 months"));
+end
+
+rule "triage categorize age band 37-60"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 37 && ageInMonths <= 60)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_37_60_MONTHS")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_37_60_MONTHS", "age band is 37-60 months"));
 end

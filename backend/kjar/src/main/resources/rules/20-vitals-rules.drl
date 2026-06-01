@@ -9,8 +9,13 @@ salience 80
 when
     $c : ChildProfile($id : childId, $age : ageInMonths)
     RespiratoryAssessmentEvent(childId == $id,
-      (($age <= 11 && respiratoryRate >= 46 && respiratoryRate < 50) ||
-       ($age >= 12 && respiratoryRate >= 36 && respiratoryRate < 40)))
+      ((($age >= 2 && $age <= 3) && respiratoryRate >= 46 && respiratoryRate < 50) ||
+       (($age >= 4 && $age <= 5) && respiratoryRate >= 46 && respiratoryRate < 50) ||
+       (($age >= 6 && $age <= 11) && respiratoryRate >= 46 && respiratoryRate < 50) ||
+       (($age >= 12 && $age <= 18) && respiratoryRate >= 36 && respiratoryRate < 40) ||
+       (($age >= 19 && $age <= 24) && respiratoryRate >= 36 && respiratoryRate < 40) ||
+       (($age >= 25 && $age <= 36) && respiratoryRate >= 36 && respiratoryRate < 40) ||
+       (($age >= 37 && $age <= 60) && respiratoryRate >= 36 && respiratoryRate < 40)))
     not ClinicalSignal(childId == $id, type == "RR_BORDERLINE")
 then
     insert(new ClinicalSignal($id, "RR_BORDERLINE", "respiratory rate is close to tachypnea threshold"));
@@ -21,8 +26,13 @@ salience 85
 when
     $c : ChildProfile($id : childId, $age : ageInMonths)
     RespiratoryAssessmentEvent(childId == $id,
-      (($age <= 11 && respiratoryRate >= 50 && respiratoryRate < 70) ||
-       ($age >= 12 && respiratoryRate >= 40 && respiratoryRate < 60)))
+      ((($age >= 2 && $age <= 3) && respiratoryRate >= 50 && respiratoryRate < 70) ||
+       (($age >= 4 && $age <= 5) && respiratoryRate >= 50 && respiratoryRate < 70) ||
+       (($age >= 6 && $age <= 11) && respiratoryRate >= 50 && respiratoryRate < 70) ||
+       (($age >= 12 && $age <= 18) && respiratoryRate >= 40 && respiratoryRate < 65) ||
+       (($age >= 19 && $age <= 24) && respiratoryRate >= 40 && respiratoryRate < 65) ||
+       (($age >= 25 && $age <= 36) && respiratoryRate >= 40 && respiratoryRate < 60) ||
+       (($age >= 37 && $age <= 60) && respiratoryRate >= 40 && respiratoryRate < 60)))
     not ClinicalSignal(childId == $id, type == "TACHYPNEA")
 then
     insert(new ClinicalSignal($id, "TACHYPNEA", "respiratory rate is above age-adjusted tachypnea threshold"));
@@ -33,8 +43,13 @@ salience 86
 when
     $c : ChildProfile($id : childId, $age : ageInMonths)
     RespiratoryAssessmentEvent(childId == $id,
-      (($age <= 11 && respiratoryRate >= 70) ||
-       ($age >= 12 && respiratoryRate >= 60)))
+      ((($age >= 2 && $age <= 3) && respiratoryRate >= 70) ||
+       (($age >= 4 && $age <= 5) && respiratoryRate >= 70) ||
+       (($age >= 6 && $age <= 11) && respiratoryRate >= 70) ||
+       (($age >= 12 && $age <= 18) && respiratoryRate >= 65) ||
+       (($age >= 19 && $age <= 24) && respiratoryRate >= 65) ||
+       (($age >= 25 && $age <= 36) && respiratoryRate >= 60) ||
+       (($age >= 37 && $age <= 60) && respiratoryRate >= 60)))
     not ClinicalSignal(childId == $id, type == "TACHYPNEA_SEVERE")
 then
     insert(new ClinicalSignal($id, "TACHYPNEA_SEVERE", "respiratory rate is in severe range"));

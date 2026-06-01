@@ -55,8 +55,13 @@ end
 query "getRiskProfileCategories"(Long $childId, String $type, String $reason)
     ClinicalSignal(childId == $childId, type == $type, reason == $reason)
     eval($type == "RISK_PROFILE_HIGH" ||
-         $type == "AGE_BAND_2_11" ||
-         $type == "AGE_BAND_12_60")
+         $type == "AGE_BAND_2_3_MONTHS" ||
+         $type == "AGE_BAND_4_5_MONTHS" ||
+         $type == "AGE_BAND_6_11_MONTHS" ||
+         $type == "AGE_BAND_12_18_MONTHS" ||
+         $type == "AGE_BAND_19_24_MONTHS" ||
+         $type == "AGE_BAND_25_36_MONTHS" ||
+         $type == "AGE_BAND_37_60_MONTHS")
 end
 
 query "getHomeMonitoringBlockers"(Long $childId, String $blockerType, String $blockerReason)

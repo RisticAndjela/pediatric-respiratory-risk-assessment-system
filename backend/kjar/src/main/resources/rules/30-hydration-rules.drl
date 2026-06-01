@@ -29,3 +29,12 @@ when
 then
     insert(new ClinicalSignal($id, "HYDRATION_SEVERE", "hydration is severely reduced"));
 end
+
+rule "hydration feeding refusal high risk"
+salience 63
+when
+    $h : HydrationIntakeEvent($id : childId, intakePercent < 60 || (poorFeeding == true && intakePercent < 70))
+    not ClinicalSignal(childId == $id, type == "FEEDING_REFUSAL_HIGH_RISK")
+then
+    insert(new ClinicalSignal($id, "FEEDING_REFUSAL_HIGH_RISK", "feeding is significantly reduced and raises concern for escalation"));
+end

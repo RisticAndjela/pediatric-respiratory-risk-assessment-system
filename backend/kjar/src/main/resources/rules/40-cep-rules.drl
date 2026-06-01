@@ -27,6 +27,17 @@ then
     insert(new ClinicalSignal($id, "BREATHING_EFFORT_ESCALATION_6H", "breathing effort worsened to combined chest indrawing and grunting within 6h"));
 end
 
+rule "cep persistent low saturation in 6h"
+salience 124
+when
+    $c : ChildProfile($id : childId)
+    $e1 : RespiratoryAssessmentEvent(childId == $id, spo2 <= 93)
+    $e2 : RespiratoryAssessmentEvent(this != $e1, childId == $id, spo2 <= 93, this after[0s,6h] $e1)
+    not ClinicalSignal(childId == $id, type == "PERSISTENT_LOW_SATURATION_6H")
+then
+    insert(new ClinicalSignal($id, "PERSISTENT_LOW_SATURATION_6H", "oxygen saturation remained at or below 93 within repeated assessments over 6h"));
+end
+
 rule "cep persistent tachypnea in 12h"
 salience 120
 when

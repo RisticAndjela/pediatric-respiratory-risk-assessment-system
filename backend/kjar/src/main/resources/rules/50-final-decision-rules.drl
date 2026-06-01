@@ -30,6 +30,10 @@ when
       (exists ClinicalSignal(childId == $id, type == "RAPID_OXYGEN_DROP_2H") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
       or
       (exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_ESCALATION_6H") and exists ClinicalSignal(childId == $id, type == "HYPOXEMIA_MODERATE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "PERSISTENT_LOW_SATURATION_6H"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "FEEDING_REFUSAL_HIGH_RISK") and exists ClinicalSignal(childId == $id, type == "TACHYPNEA"))
     )
     not Recommendation(childId == $id, action == "URGENT_HOSPITAL_ASSESSMENT")
 then
@@ -53,6 +57,14 @@ when
       or
       (exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_ESCALATION_6H"))
       or
+      (exists ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH") and exists ClinicalSignal(childId == $id, type == "OXYGEN_MONITOR_ZONE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH") and exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_MILD"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "FEEDING_REFUSAL_HIGH_RISK"))
+      or
       (exists ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H"))
     )
     not Recommendation(childId == $id, action == "NEEDS_SAME_DAY_CLINICAL_REVIEW")
@@ -75,6 +87,9 @@ when
     not ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_SEVERE")
     not ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE")
     not ClinicalSignal(childId == $id, type == "HYDRATION_SEVERE")
+    not ClinicalSignal(childId == $id, type == "FEEDING_REFUSAL_HIGH_RISK")
+    not ClinicalSignal(childId == $id, type == "PERSISTENT_LOW_SATURATION_6H")
+    not ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH")
     not Recommendation(childId == $id, action == "LOW_RISK_HOME_MONITORING")
 then
     insert(new Recommendation($id, "LOW_RISK_HOME_MONITORING", "current findings support home monitoring with follow-up"));

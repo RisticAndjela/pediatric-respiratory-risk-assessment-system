@@ -43,6 +43,7 @@ query "getRespiratoryCategories"(Long $childId, String $type, String $reason)
          $type == "HYPOXEMIA_SEVERE" ||
          $type == "RAPID_OXYGEN_DROP_2H" ||
          $type == "BREATHING_EFFORT_ESCALATION_6H" ||
+         $type == "PERSISTENT_LOW_SATURATION_6H" ||
          $type == "PERSISTENT_TACHYPNEA_12H" ||
          $type == "RESP_DISTRESS_GRUNTING" ||
          $type == "RESP_DISTRESS_INDRAWING")
@@ -52,7 +53,8 @@ query "getHydrationCategories"(Long $childId, String $type, String $reason)
     ClinicalSignal(childId == $childId, type == $type, reason == $reason)
     eval($type == "HYDRATION_MILD" ||
          $type == "HYDRATION_MODERATE" ||
-         $type == "HYDRATION_SEVERE")
+         $type == "HYDRATION_SEVERE" ||
+         $type == "FEEDING_REFUSAL_HIGH_RISK")
 end
 
 query "getRiskProfileCategories"(Long $childId, String $type, String $reason)
@@ -77,9 +79,11 @@ query "getHomeMonitoringBlockers"(Long $childId, String $blockerType, String $bl
          $blockerType == "BREATHING_EFFORT_SEVERE" ||
          $blockerType == "HYDRATION_MODERATE" ||
          $blockerType == "HYDRATION_SEVERE" ||
+         $blockerType == "FEEDING_REFUSAL_HIGH_RISK" ||
          $blockerType == "EMERGENCY_RED_FLAG" ||
          $blockerType == "RAPID_OXYGEN_DROP_2H" ||
          $blockerType == "BREATHING_EFFORT_ESCALATION_6H" ||
+         $blockerType == "PERSISTENT_LOW_SATURATION_6H" ||
          $blockerType == "PERSISTENT_TACHYPNEA_12H" ||
          $blockerType == "RESP_DISTRESS_GRUNTING" ||
          $blockerType == "RESP_DISTRESS_INDRAWING")

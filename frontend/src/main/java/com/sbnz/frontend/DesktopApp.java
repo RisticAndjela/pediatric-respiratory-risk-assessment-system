@@ -9,6 +9,7 @@ import com.sbnz.frontend.drools.RespiratoryKieSessionFactory;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.rule.FactHandle;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
 import org.kie.api.runtime.rule.Variable;
@@ -70,8 +71,12 @@ public class DesktopApp {
     private JTextField intakeField;
     private JCheckBox poorFeedingBox;
     private JComboBox<String> modelSelector;
+    private JComboBox<String> sessionModeSelector;
     private JTextArea outputArea;
     private JList<Long> patientList;
+    private KieSession learnedSession;
+    private final Map<Long, FactHandle> learnedChildProfiles = new LinkedHashMap<>();
+    private final Map<Long, FactHandle> learnedHydrationFacts = new LinkedHashMap<>();
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new DesktopApp().createAndShowUI());
@@ -109,6 +114,11 @@ public class DesktopApp {
                 "Conservative preset",
                 "High-risk preset"
         });
+        sessionModeSelector = new JComboBox<>(new String[]{
+                "Compare both sessions",
+                "Fresh session only",
+                "Learned session only"
+        });
 
         addRow(formPanel, "Child ID", childIdField);
         addRow(formPanel, "Age in months", ageField);
@@ -118,6 +128,7 @@ public class DesktopApp {
         addRow(formPanel, "Event 2 SpO2", spo22Field);
         addRow(formPanel, "Hydration intake %", intakeField);
         addRow(formPanel, "Input model", modelSelector);
+        addRow(formPanel, "Session mode", sessionModeSelector);
 
         formPanel.add(chest1Box);
         formPanel.add(grunting1Box);
@@ -142,11 +153,15 @@ public class DesktopApp {
         JButton showHistoryButton = new JButton("Show History");
         showHistoryButton.addActionListener(e -> showHistoryForSelectedPatient());
 
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 4, 8, 8));
+        JButton resetLearnedSessionButton = new JButton("Reset Learned Session");
+        resetLearnedSessionButton.addActionListener(e -> resetLearnedSession());
+
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 5, 8, 8));
         buttonPanel.add(applyPresetButton);
         buttonPanel.add(savePatientButton);
         buttonPanel.add(runSelectedButton);
         buttonPanel.add(showHistoryButton);
+        buttonPanel.add(resetLearnedSessionButton);
 
         outputArea = new JTextArea();
         outputArea.setEditable(false);
@@ -333,7 +348,7 @@ public class DesktopApp {
         if (c == null) return;
         outputArea.setText("Running rules for patient " + selectedId + "...\n");
         try {
-            String output = runRules(c);
+            String output = runRulesForMode(c);
             outputArea.setText(output);
             runHistory.computeIfAbsent(selectedId, id -> new ArrayList<>())
                     .add(LocalDateTime.now() + "\n" + output);
@@ -365,6 +380,16 @@ public class DesktopApp {
         outputArea.setText(sb.toString());
     }
 
+    private void resetLearnedSession() {
+        if (learnedSession != null) {
+            learnedSession.dispose();
+        }
+        learnedSession = null;
+        learnedChildProfiles.clear();
+        learnedHydrationFacts.clear();
+        outputArea.setText("Learned session reset.\nFuture learned runs will start from an empty state.");
+    }
+
     private PatientCase readCaseFromForm() {
         PatientCase c = new PatientCase();
         c.childId = Long.parseLong(childIdField.getText().trim());
@@ -388,16 +413,47 @@ public class DesktopApp {
         return c;
     }
 
-    private String runRules(PatientCase c) {
-        KieSession ksession = RespiratoryKieSessionFactory.createSession();
-        List<String> activatedRules = new ArrayList<>();
-        ksession.addEventListener(new DefaultAgendaEventListener() {
-            @Override
-            public void afterMatchFired(AfterMatchFiredEvent event) {
-                activatedRules.add(event.getMatch().getRule().getName());
+    private String runRulesForMode(PatientCase c) {
+        String selectedMode = (String) sessionModeSelector.getSelectedItem();
+        if ("Fresh session only".equals(selectedMode)) {
+            KieSession freshSession = RespiratoryKieSessionFactory.createSession();
+            try {
+                insertCaseIntoFreshSession(freshSession, c);
+                return renderSessionReport("Fresh session", freshSession, c.childId, false);
+            } finally {
+                freshSession.dispose();
             }
-        });
+        }
+        if ("Learned session only".equals(selectedMode)) {
+            KieSession activeLearnedSession = getOrCreateLearnedSession();
+            refreshLearnedSessionForChild(activeLearnedSession, c);
+            return renderSessionReport("Learned session", activeLearnedSession, c.childId, true);
+        }
 
+        KieSession freshSession = RespiratoryKieSessionFactory.createSession();
+        String freshOutput;
+        try {
+            insertCaseIntoFreshSession(freshSession, c);
+            freshOutput = renderSessionReport("Fresh session", freshSession, c.childId, false);
+        } finally {
+            freshSession.dispose();
+        }
+
+        KieSession activeLearnedSession = getOrCreateLearnedSession();
+        refreshLearnedSessionForChild(activeLearnedSession, c);
+        String learnedOutput = renderSessionReport("Learned session", activeLearnedSession, c.childId, true);
+
+        return freshOutput + "\n\n========================================\n\n" + learnedOutput;
+    }
+
+    private KieSession getOrCreateLearnedSession() {
+        if (learnedSession == null) {
+            learnedSession = RespiratoryKieSessionFactory.createSession();
+        }
+        return learnedSession;
+    }
+
+    private void insertCaseIntoFreshSession(KieSession ksession, PatientCase c) {
         ChildProfile child = new ChildProfile(c.childId, c.ageInMonths);
         RespiratoryAssessmentEvent first = new RespiratoryAssessmentEvent(c.childId, Date.from(LocalDateTime.now().minusHours(2).atZone(ZoneId.systemDefault()).toInstant()), c.rr1, c.spo21, c.chest1, c.grunting1, c.apnea1, c.cyanosis1);
         RespiratoryAssessmentEvent second = new RespiratoryAssessmentEvent(c.childId, Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()), c.rr2, c.spo22, c.chest2, c.grunting2, c.apnea2, c.cyanosis2);
@@ -407,22 +463,89 @@ public class DesktopApp {
         ksession.insert(first);
         ksession.insert(second);
         ksession.insert(hydration);
+    }
 
+    private void refreshLearnedSessionForChild(KieSession ksession, PatientCase c) {
+        removeDerivedFactsForChild(ksession, c.childId);
+
+        FactHandle existingChild = learnedChildProfiles.get(c.childId);
+        if (existingChild != null) {
+            ksession.delete(existingChild);
+        }
+        ChildProfile child = new ChildProfile(c.childId, c.ageInMonths);
+        learnedChildProfiles.put(c.childId, ksession.insert(child));
+
+        FactHandle existingHydration = learnedHydrationFacts.get(c.childId);
+        if (existingHydration != null) {
+            ksession.delete(existingHydration);
+        }
+        HydrationIntakeEvent hydration = new HydrationIntakeEvent(c.childId, c.intakePercent, c.poorFeeding);
+        learnedHydrationFacts.put(c.childId, ksession.insert(hydration));
+
+        RespiratoryAssessmentEvent first = new RespiratoryAssessmentEvent(c.childId, Date.from(LocalDateTime.now().minusHours(2).atZone(ZoneId.systemDefault()).toInstant()), c.rr1, c.spo21, c.chest1, c.grunting1, c.apnea1, c.cyanosis1);
+        RespiratoryAssessmentEvent second = new RespiratoryAssessmentEvent(c.childId, Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()), c.rr2, c.spo22, c.chest2, c.grunting2, c.apnea2, c.cyanosis2);
+        ksession.insert(first);
+        ksession.insert(second);
+    }
+
+    private void removeDerivedFactsForChild(KieSession ksession, Long childId) {
+        List<FactHandle> handlesToDelete = new ArrayList<>();
+        for (Object object : ksession.getObjects()) {
+            if (object instanceof ClinicalSignal) {
+                ClinicalSignal signal = (ClinicalSignal) object;
+                if (childId.equals(signal.getChildId())) {
+                    handlesToDelete.add(ksession.getFactHandle(object));
+                }
+            }
+            if (object instanceof Recommendation) {
+                Recommendation recommendation = (Recommendation) object;
+                if (childId.equals(recommendation.getChildId())) {
+                    handlesToDelete.add(ksession.getFactHandle(object));
+                }
+            }
+        }
+        for (FactHandle handle : handlesToDelete) {
+            if (handle != null) {
+                ksession.delete(handle);
+            }
+        }
+    }
+
+    private String renderSessionReport(String title, KieSession ksession, Long childId, boolean learnedMode) {
+        List<String> activatedRules = new ArrayList<>();
+        DefaultAgendaEventListener listener = new DefaultAgendaEventListener() {
+            @Override
+            public void afterMatchFired(AfterMatchFiredEvent event) {
+                activatedRules.add(event.getMatch().getRule().getName());
+            }
+        };
+        ksession.addEventListener(listener);
         int fired = ksession.fireAllRules();
+        ksession.removeEventListener(listener);
 
         StringBuilder out = new StringBuilder();
-        out.append("Summary\n");
-        out.append("patient: ").append(c.childId).append("\n");
-        out.append("rules fired: ").append(fired).append("\n\n");
+        out.append(title).append("\n");
+        out.append("mode: ").append(learnedMode ? "stateful learned memory" : "fresh per-run analysis").append("\n");
+        out.append("patient: ").append(childId).append("\n");
+        out.append("rules fired: ").append(fired).append("\n");
+        if (learnedMode) {
+            int totalRespiratoryEvents = countRespiratoryEventsForChild(ksession, childId);
+            out.append("stored respiratory events for child: ").append(totalRespiratoryEvents).append("\n");
+        }
 
-        out.append("Activated rules\n");
+        out.append("\nActivated rules\n");
         for (String ruleName : activatedRules) {
             out.append("- ").append(ruleName).append("\n");
         }
 
         out.append("\nDerived facts\n");
         Collection<ClinicalSignal> signals = (Collection<ClinicalSignal>) ksession.getObjects(o -> o instanceof ClinicalSignal);
-        List<ClinicalSignal> sortedSignals = new ArrayList<>(signals);
+        List<ClinicalSignal> sortedSignals = new ArrayList<>();
+        for (ClinicalSignal signal : signals) {
+            if (childId.equals(signal.getChildId())) {
+                sortedSignals.add(signal);
+            }
+        }
         sortedSignals.sort(Comparator.comparing(ClinicalSignal::getType).thenComparing(ClinicalSignal::getReason));
         for (ClinicalSignal signal : sortedSignals) {
             out.append("- ").append(signal.getType()).append(": ").append(signal.getReason()).append("\n");
@@ -430,7 +553,12 @@ public class DesktopApp {
 
         out.append("\nFinal decision\n");
         Collection<Recommendation> recs = (Collection<Recommendation>) ksession.getObjects(o -> o instanceof Recommendation);
-        List<Recommendation> sortedRecommendations = new ArrayList<>(recs);
+        List<Recommendation> sortedRecommendations = new ArrayList<>();
+        for (Recommendation recommendation : recs) {
+            if (childId.equals(recommendation.getChildId())) {
+                sortedRecommendations.add(recommendation);
+            }
+        }
         sortedRecommendations.sort(Comparator.comparing(Recommendation::getAction).thenComparing(Recommendation::getExplanation));
         for (Recommendation recommendation : sortedRecommendations) {
             out.append("- ").append(recommendation.getAction()).append(": ").append(recommendation.getExplanation()).append("\n");
@@ -438,41 +566,53 @@ public class DesktopApp {
 
         out.append("\nQueries\n");
         out.append("isSafeForHomeMonitoring\n");
-        QueryResults safety = ksession.getQueryResults("isSafeForHomeMonitoring", c.childId);
+        QueryResults safety = ksession.getQueryResults("isSafeForHomeMonitoring", childId);
         out.append("rows: ").append(safety.size()).append("\n");
 
         out.append("\ngetEscalationReasons\n");
-        QueryResults reasons = ksession.getQueryResults("getEscalationReasons", c.childId, Variable.v, Variable.v);
+        QueryResults reasons = ksession.getQueryResults("getEscalationReasons", childId, Variable.v, Variable.v);
         for (QueryResultsRow row : reasons) {
             out.append("- ").append(row.get("$type")).append(": ").append(row.get("$reason")).append("\n");
         }
 
         out.append("\ngetHomeMonitoringBlockers\n");
-        QueryResults blockers = ksession.getQueryResults("getHomeMonitoringBlockers", c.childId, Variable.v, Variable.v);
+        QueryResults blockers = ksession.getQueryResults("getHomeMonitoringBlockers", childId, Variable.v, Variable.v);
         for (QueryResultsRow row : blockers) {
             out.append("- blocker ").append(row.get("$blockerType")).append(": ").append(row.get("$blockerReason")).append("\n");
         }
 
         out.append("\ngetRespiratoryCategories\n");
-        QueryResults respiratoryCats = ksession.getQueryResults("getRespiratoryCategories", c.childId, Variable.v, Variable.v);
+        QueryResults respiratoryCats = ksession.getQueryResults("getRespiratoryCategories", childId, Variable.v, Variable.v);
         for (QueryResultsRow row : respiratoryCats) {
             out.append("- respiratory ").append(row.get("$type")).append(": ").append(row.get("$reason")).append("\n");
         }
 
         out.append("\ngetHydrationCategories\n");
-        QueryResults hydrationCats = ksession.getQueryResults("getHydrationCategories", c.childId, Variable.v, Variable.v);
+        QueryResults hydrationCats = ksession.getQueryResults("getHydrationCategories", childId, Variable.v, Variable.v);
         for (QueryResultsRow row : hydrationCats) {
             out.append("- hydration ").append(row.get("$type")).append(": ").append(row.get("$reason")).append("\n");
         }
 
         out.append("\ngetRequiredAction\n");
-        QueryResults action = ksession.getQueryResults("getRequiredAction", c.childId, Variable.v, Variable.v);
+        QueryResults action = ksession.getQueryResults("getRequiredAction", childId, Variable.v, Variable.v);
         for (QueryResultsRow row : action) {
             out.append("- action: ").append(row.get("$action")).append(" | explanation: ").append(row.get("$explanation")).append("\n");
         }
 
-        ksession.dispose();
         return out.toString();
+    }
+
+    private int countRespiratoryEventsForChild(KieSession ksession, Long childId) {
+        int count = 0;
+        for (Object object : ksession.getObjects()) {
+            if (object instanceof RespiratoryAssessmentEvent) {
+                RespiratoryAssessmentEvent event = (RespiratoryAssessmentEvent) object;
+                if (childId.equals(event.getChildId())) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private static class PatientCase {

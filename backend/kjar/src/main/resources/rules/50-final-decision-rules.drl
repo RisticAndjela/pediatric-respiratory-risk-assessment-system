@@ -1,0 +1,75 @@
+package rules;
+
+import com.sbnz.model.ChildProfile;
+import com.sbnz.model.ClinicalSignal;
+import com.sbnz.model.Recommendation;
+
+rule "decision emergency from severe hypoxemia and severe effort"
+salience 1500
+when
+    $c : ChildProfile($id : childId)
+    exists ClinicalSignal(childId == $id, type == "HYPOXEMIA_SEVERE")
+    exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_SEVERE")
+    not Recommendation(childId == $id, action == "EMERGENCY_RESPONSE")
+then
+    insert(new Recommendation($id, "EMERGENCY_RESPONSE", "severe hypoxemia with severe breathing effort"));
+end
+
+rule "decision urgent hospital assessment"
+salience 500
+when
+    $c : ChildProfile($id : childId)
+    not Recommendation(childId == $id, action == "EMERGENCY_RESPONSE")
+    (
+      (exists ClinicalSignal(childId == $id, type == "HYPOXEMIA_MODERATE") and exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_SEVERE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "TACHYPNEA_SEVERE") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH") and exists ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "OXYGEN_DROP_TREND_12H") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
+    )
+    not Recommendation(childId == $id, action == "URGENT_HOSPITAL_ASSESSMENT")
+then
+    insert(new Recommendation($id, "URGENT_HOSPITAL_ASSESSMENT", "combined high-risk respiratory pattern requires urgent hospital assessment"));
+end
+
+rule "decision same day clinical review"
+salience 300
+when
+    $c : ChildProfile($id : childId)
+    not Recommendation(childId == $id, action == "EMERGENCY_RESPONSE")
+    not Recommendation(childId == $id, action == "URGENT_HOSPITAL_ASSESSMENT")
+    (
+      (exists ClinicalSignal(childId == $id, type == "TACHYPNEA") and exists ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_MILD"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "OXYGEN_MONITOR_ZONE") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "RR_BORDERLINE") and exists ClinicalSignal(childId == $id, type == "HYDRATION_MILD"))
+      or
+      (exists ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H"))
+    )
+    not Recommendation(childId == $id, action == "NEEDS_SAME_DAY_CLINICAL_REVIEW")
+then
+    insert(new Recommendation($id, "NEEDS_SAME_DAY_CLINICAL_REVIEW", "same-day clinical review is recommended from combined moderate findings"));
+end
+
+rule "decision low risk home monitoring"
+salience 100
+when
+    $c : ChildProfile($id : childId)
+    not Recommendation(childId == $id, action == "EMERGENCY_RESPONSE")
+    not Recommendation(childId == $id, action == "URGENT_HOSPITAL_ASSESSMENT")
+    not Recommendation(childId == $id, action == "NEEDS_SAME_DAY_CLINICAL_REVIEW")
+    not ClinicalSignal(childId == $id, type == "TACHYPNEA")
+    not ClinicalSignal(childId == $id, type == "TACHYPNEA_SEVERE")
+    not ClinicalSignal(childId == $id, type == "HYPOXEMIA_MODERATE")
+    not ClinicalSignal(childId == $id, type == "HYPOXEMIA_SEVERE")
+    not ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_MILD")
+    not ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_SEVERE")
+    not ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE")
+    not ClinicalSignal(childId == $id, type == "HYDRATION_SEVERE")
+    not Recommendation(childId == $id, action == "LOW_RISK_HOME_MONITORING")
+then
+    insert(new Recommendation($id, "LOW_RISK_HOME_MONITORING", "current findings support home monitoring with follow-up"));
+end

@@ -1,0 +1,8 @@
+package rules;
+
+import com.sbnz.model.RespiratoryAssessmentEvent;
+
+declare RespiratoryAssessmentEvent
+    @role( event )
+    @timestamp( time )
+end

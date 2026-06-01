@@ -1,0 +1,11 @@
+RuleSet,rules
+Import,com.sbnz.model.ChildProfile
+Import,com.sbnz.model.ClinicalSignal
+Import,com.sbnz.model.RespiratoryAssessmentEvent
+
+RuleTable,AgeThresholdTemplate
+NAME,CONDITION,CONDITION,ACTION
+, $c : ChildProfile($id : childId, ageInMonths >= @{MIN_AGE} && ageInMonths <= @{MAX_AGE}), RespiratoryAssessmentEvent(childId == $id, respiratoryRate >= @{RR_THRESHOLD}), insert(new ClinicalSignal($id, "TEMPLATE_TACHYPNEA", "template tachypnea threshold crossed"))
+"Age 2-11 months",2,11,50
+"Age 12-60 months",12,60,40
+

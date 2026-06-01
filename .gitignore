@@ -1,1 +1,39 @@
+/Ve�be
+/Predavanja
+
+# IDE/editor
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Java/Maven build output
+**/target/
+**/out/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+
+# Logs
+**/*.log
+logs/
+
+# Node/frontend artifacts
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/.cache/
+**/coverage/
+
+# Environment/local config
+.env
+.env.*
+!.env.example
 /Vežbe

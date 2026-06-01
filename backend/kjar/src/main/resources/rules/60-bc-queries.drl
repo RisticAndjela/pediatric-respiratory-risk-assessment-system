@@ -1,0 +1,75 @@
+package rules;
+
+import com.sbnz.model.ClinicalSignal;
+import com.sbnz.model.Recommendation;
+
+query "isSafeForHomeMonitoring"(Long $childId)
+    exists Recommendation(childId == $childId, action == "LOW_RISK_HOME_MONITORING")
+end
+
+query "getEscalationReasons"(Long $childId, String $type, String $reason)
+    ClinicalSignal(childId == $childId, type == $type, reason == $reason)
+end
+
+query "getRequiredAction"(Long $childId, String $action, String $explanation)
+    Recommendation(childId == $childId, action == $action, explanation == $explanation)
+end
+
+query "hasEmergencyAction"(Long $childId)
+    exists Recommendation(childId == $childId, action == "EMERGENCY_RESPONSE")
+end
+
+query "hasUrgentHospitalAction"(Long $childId)
+    exists Recommendation(childId == $childId, action == "URGENT_HOSPITAL_ASSESSMENT")
+end
+
+query "hasSameDayReviewAction"(Long $childId)
+    exists Recommendation(childId == $childId, action == "NEEDS_SAME_DAY_CLINICAL_REVIEW")
+end
+
+query "hasLowRiskAction"(Long $childId)
+    exists Recommendation(childId == $childId, action == "LOW_RISK_HOME_MONITORING")
+end
+
+query "getRespiratoryCategories"(Long $childId, String $type, String $reason)
+    ClinicalSignal(childId == $childId, $type : type, $reason : reason)
+    eval($type == "RR_BORDERLINE" ||
+         $type == "TACHYPNEA" ||
+         $type == "TACHYPNEA_SEVERE" ||
+         $type == "BREATHING_EFFORT_MILD" ||
+         $type == "BREATHING_EFFORT_SEVERE" ||
+         $type == "OXYGEN_MONITOR_ZONE" ||
+         $type == "HYPOXEMIA_MODERATE" ||
+         $type == "HYPOXEMIA_SEVERE" ||
+         $type == "PERSISTENT_TACHYPNEA_12H" ||
+         $type == "OXYGEN_DROP_TREND_12H")
+end
+
+query "getHydrationCategories"(Long $childId, String $type, String $reason)
+    ClinicalSignal(childId == $childId, $type : type, $reason : reason)
+    eval($type == "HYDRATION_MILD" ||
+         $type == "HYDRATION_MODERATE" ||
+         $type == "HYDRATION_SEVERE")
+end
+
+query "getRiskProfileCategories"(Long $childId, String $type, String $reason)
+    ClinicalSignal(childId == $childId, $type : type, $reason : reason)
+    eval($type == "RISK_PROFILE_HIGH" ||
+         $type == "AGE_BAND_2_11" ||
+         $type == "AGE_BAND_12_60")
+end
+
+query "getHomeMonitoringBlockers"(Long $childId, String $blockerType, String $blockerReason)
+    ClinicalSignal(childId == $childId, $blockerType : type, $blockerReason : reason)
+    eval($blockerType == "TACHYPNEA" ||
+         $blockerType == "TACHYPNEA_SEVERE" ||
+         $blockerType == "HYPOXEMIA_MODERATE" ||
+         $blockerType == "HYPOXEMIA_SEVERE" ||
+         $blockerType == "BREATHING_EFFORT_MILD" ||
+         $blockerType == "BREATHING_EFFORT_SEVERE" ||
+         $blockerType == "HYDRATION_MODERATE" ||
+         $blockerType == "HYDRATION_SEVERE" ||
+         $blockerType == "EMERGENCY_RED_FLAG" ||
+         $blockerType == "PERSISTENT_TACHYPNEA_12H" ||
+         $blockerType == "OXYGEN_DROP_TREND_12H")
+end

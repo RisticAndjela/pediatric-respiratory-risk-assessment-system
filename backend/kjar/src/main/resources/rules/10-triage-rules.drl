@@ -1,0 +1,31 @@
+package rules;
+
+import com.sbnz.model.ChildProfile;
+import com.sbnz.model.ClinicalSignal;
+
+rule "triage categorize high-risk infant"
+salience 100
+when
+    $c : ChildProfile($id : childId, ageInMonths <= 3)
+    not ClinicalSignal(childId == $id, type == "RISK_PROFILE_HIGH")
+then
+    insert(new ClinicalSignal($id, "RISK_PROFILE_HIGH", "young infant under 3 months"));
+end
+
+rule "triage categorize age band 2-11"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 2 && ageInMonths <= 11)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_2_11")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_2_11", "age band is 2-11 months"));
+end
+
+rule "triage categorize age band 12-60"
+salience 90
+when
+    $c : ChildProfile($id : childId, ageInMonths >= 12 && ageInMonths <= 60)
+    not ClinicalSignal(childId == $id, type == "AGE_BAND_12_60")
+then
+    insert(new ClinicalSignal($id, "AGE_BAND_12_60", "age band is 12-60 months"));
+end

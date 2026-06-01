@@ -1,0 +1,80 @@
+package rules;
+
+import com.sbnz.model.ChildProfile;
+import com.sbnz.model.ClinicalSignal;
+import com.sbnz.model.RespiratoryAssessmentEvent;
+
+rule "vitals rr borderline"
+salience 80
+when
+    $c : ChildProfile($id : childId, $age : ageInMonths)
+    RespiratoryAssessmentEvent(childId == $id,
+      (($age <= 11 && respiratoryRate >= 46 && respiratoryRate < 50) ||
+       ($age >= 12 && respiratoryRate >= 36 && respiratoryRate < 40)))
+    not ClinicalSignal(childId == $id, type == "RR_BORDERLINE")
+then
+    insert(new ClinicalSignal($id, "RR_BORDERLINE", "respiratory rate is close to tachypnea threshold"));
+end
+
+rule "vitals severe tachypnea"
+salience 86
+when
+    $c : ChildProfile($id : childId, $age : ageInMonths)
+    RespiratoryAssessmentEvent(childId == $id,
+      (($age <= 11 && respiratoryRate >= 70) ||
+       ($age >= 12 && respiratoryRate >= 60)))
+    not ClinicalSignal(childId == $id, type == "TACHYPNEA_SEVERE")
+then
+    insert(new ClinicalSignal($id, "TACHYPNEA_SEVERE", "respiratory rate is in severe range"));
+end
+
+rule "vitals oxygen monitor zone"
+salience 70
+when
+    $c : ChildProfile($id : childId)
+    RespiratoryAssessmentEvent(childId == $id, spo2 <= 95 && spo2 > 93)
+    not ClinicalSignal(childId == $id, type == "OXYGEN_MONITOR_ZONE")
+then
+    insert(new ClinicalSignal($id, "OXYGEN_MONITOR_ZONE", "oxygen is borderline and needs monitoring"));
+end
+
+rule "vitals hypoxemia moderate"
+salience 71
+when
+    $c : ChildProfile($id : childId)
+    RespiratoryAssessmentEvent(childId == $id, spo2 <= 93 && spo2 >= 90)
+    not ClinicalSignal(childId == $id, type == "HYPOXEMIA_MODERATE")
+then
+    insert(new ClinicalSignal($id, "HYPOXEMIA_MODERATE", "oxygen is in moderate hypoxemia range"));
+end
+
+rule "vitals hypoxemia severe"
+salience 1000
+when
+    $c : ChildProfile($id : childId)
+    RespiratoryAssessmentEvent(childId == $id, spo2 < 90)
+    not ClinicalSignal(childId == $id, type == "HYPOXEMIA_SEVERE")
+then
+    insert(new ClinicalSignal($id, "HYPOXEMIA_SEVERE", "oxygen is in severe hypoxemia range"));
+end
+
+rule "vitals breathing effort mild"
+salience 75
+when
+    $c : ChildProfile($id : childId)
+    RespiratoryAssessmentEvent(childId == $id, chestIndrawing == true || grunting == true)
+    not ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_MILD")
+then
+    insert(new ClinicalSignal($id, "BREATHING_EFFORT_MILD", "additional breathing effort is present"));
+end
+
+rule "vitals breathing effort severe"
+salience 76
+when
+    $c : ChildProfile($id : childId)
+    RespiratoryAssessmentEvent($e1 : this, childId == $id, chestIndrawing == true, grunting == true)
+    RespiratoryAssessmentEvent(this != $e1, childId == $id, chestIndrawing == true || grunting == true)
+    not ClinicalSignal(childId == $id, type == "BREATHING_EFFORT_SEVERE")
+then
+    insert(new ClinicalSignal($id, "BREATHING_EFFORT_SEVERE", "persistent and severe breathing effort pattern"));
+end

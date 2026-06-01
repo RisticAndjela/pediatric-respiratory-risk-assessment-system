@@ -1,0 +1,30 @@
+package rules;
+
+import com.sbnz.model.ChildProfile;
+import com.sbnz.model.ClinicalSignal;
+import com.sbnz.model.RespiratoryAssessmentEvent;
+
+rule "cep persistent tachypnea in 12h"
+salience 120
+when
+    $c : ChildProfile($id : childId, $age : ageInMonths)
+    $e1 : RespiratoryAssessmentEvent(childId == $id,
+        (($age <= 11 && respiratoryRate >= 50) || ($age >= 12 && respiratoryRate >= 40)))
+    $e2 : RespiratoryAssessmentEvent(this != $e1, childId == $id,
+        (($age <= 11 && respiratoryRate >= 50) || ($age >= 12 && respiratoryRate >= 40)),
+        this after[0s,12h] $e1)
+    not ClinicalSignal(childId == $id, type == "PERSISTENT_TACHYPNEA_12H")
+then
+    insert(new ClinicalSignal($id, "PERSISTENT_TACHYPNEA_12H", "tachypnea persisted across events within 12h window"));
+end
+
+rule "cep oxygen drop trend"
+salience 121
+when
+    $c : ChildProfile($id : childId)
+    $e1 : RespiratoryAssessmentEvent($spo1 : spo2, childId == $id)
+    $e2 : RespiratoryAssessmentEvent(this != $e1, $spo2 : spo2, childId == $id, $spo2 <= $spo1 - 2, this after[0s,12h] $e1)
+    not ClinicalSignal(childId == $id, type == "OXYGEN_DROP_TREND_12H")
+then
+    insert(new ClinicalSignal($id, "OXYGEN_DROP_TREND_12H", "oxygen saturation dropped by at least 2 points within 12h"));
+end

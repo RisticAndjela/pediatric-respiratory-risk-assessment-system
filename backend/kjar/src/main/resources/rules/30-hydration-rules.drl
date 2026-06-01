@@ -1,0 +1,31 @@
+package rules;
+
+import com.sbnz.model.ClinicalSignal;
+import com.sbnz.model.HydrationIntakeEvent;
+
+rule "hydration mild concern"
+salience 60
+when
+    $h : HydrationIntakeEvent($id : childId, intakePercent < 85 && intakePercent >= 70)
+    not ClinicalSignal(childId == $id, type == "HYDRATION_MILD")
+then
+    insert(new ClinicalSignal($id, "HYDRATION_MILD", "hydration intake is mildly reduced"));
+end
+
+rule "hydration moderate concern"
+salience 61
+when
+    $h : HydrationIntakeEvent($id : childId, (intakePercent < 70 && intakePercent >= 50) || poorFeeding == true)
+    not ClinicalSignal(childId == $id, type == "HYDRATION_MODERATE")
+then
+    insert(new ClinicalSignal($id, "HYDRATION_MODERATE", "hydration is moderately reduced or poor feeding is present"));
+end
+
+rule "hydration severe concern"
+salience 62
+when
+    $h : HydrationIntakeEvent($id : childId, intakePercent < 50)
+    not ClinicalSignal(childId == $id, type == "HYDRATION_SEVERE")
+then
+    insert(new ClinicalSignal($id, "HYDRATION_SEVERE", "hydration is severely reduced"));
+end

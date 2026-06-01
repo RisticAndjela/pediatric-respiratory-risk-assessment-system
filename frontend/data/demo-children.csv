@@ -1,0 +1,5 @@
+childId,ageInMonths,rr1,spo21,chest1,grunting1,apnea1,cyanosis1,rr2,spo22,chest2,grunting2,apnea2,cyanosis2,intakePercent,poorFeeding
+1,10,54,95,true,false,false,false,58,94,true,true,false,false,60,true
+2,24,40,97,false,false,false,false,38,97,false,false,false,false,90,false
+3,6,62,89,true,true,true,false,68,88,true,true,false,true,45,true
+4,18,44,95,false,true,false,false,46,94,true,true,false,false,65,true

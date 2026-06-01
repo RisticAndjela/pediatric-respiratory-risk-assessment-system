@@ -130,6 +130,7 @@ public final class RespiratoryKieSessionFactory {
         drl.append("package rules;\n\n");
         drl.append("import com.sbnz.model.ChildProfile;\n");
         drl.append("import com.sbnz.model.ClinicalSignal;\n");
+        drl.append("import com.sbnz.model.HydrationIntakeEvent;\n");
         drl.append("import com.sbnz.model.Recommendation;\n");
         drl.append("import com.sbnz.model.RespiratoryAssessmentEvent;\n\n");
 
@@ -142,16 +143,18 @@ public final class RespiratoryKieSessionFactory {
             String explanationCode = row[11];
             String reason = row[12];
 
-            if (eventCondition.contains("intakePercent")) {
-                continue;
-            }
-
             drl.append("rule \"TPL RED FLAG ").append(flagId).append(" ").append(flagType).append("\"\n")
                     .append("salience ").append(salience).append("\n")
                     .append("when\n")
-                    .append("    $c : ChildProfile($id : childId)\n")
-                    .append("    RespiratoryAssessmentEvent(childId == $id, ").append(eventCondition).append(")\n")
-                    .append("    not ClinicalSignal(childId == $id, type == \"").append(explanationCode).append("\")\n")
+                    .append("    $c : ChildProfile($id : childId)\n");
+
+            if (eventCondition.contains("intakePercent")) {
+                drl.append("    HydrationIntakeEvent(childId == $id, ").append(eventCondition).append(")\n");
+            } else {
+                drl.append("    RespiratoryAssessmentEvent(childId == $id, ").append(eventCondition).append(")\n");
+            }
+
+            drl.append("    not ClinicalSignal(childId == $id, type == \"").append(explanationCode).append("\")\n")
                     .append("then\n")
                     .append("    insert(new ClinicalSignal($id, \"").append(explanationCode).append("\", \"").append(reason).append("\"));\n");
             if ("EMERGENCY_RESPONSE".equals(action)) {

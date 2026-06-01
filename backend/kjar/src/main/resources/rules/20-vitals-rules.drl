@@ -16,6 +16,18 @@ then
     insert(new ClinicalSignal($id, "RR_BORDERLINE", "respiratory rate is close to tachypnea threshold"));
 end
 
+rule "vitals tachypnea"
+salience 85
+when
+    $c : ChildProfile($id : childId, $age : ageInMonths)
+    RespiratoryAssessmentEvent(childId == $id,
+      (($age <= 11 && respiratoryRate >= 50 && respiratoryRate < 70) ||
+       ($age >= 12 && respiratoryRate >= 40 && respiratoryRate < 60)))
+    not ClinicalSignal(childId == $id, type == "TACHYPNEA")
+then
+    insert(new ClinicalSignal($id, "TACHYPNEA", "respiratory rate is above age-adjusted tachypnea threshold"));
+end
+
 rule "vitals severe tachypnea"
 salience 86
 when

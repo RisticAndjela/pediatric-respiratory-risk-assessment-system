@@ -21,6 +21,7 @@ public final class RespiratoryKieSessionFactory {
 
     private static final String[] DRL_FILES = {
             "00-event-declarations.drl",
+            "05-signal-category-hierarchy.drl",
             "10-triage-rules.drl",
             "20-vitals-rules.drl",
             "30-hydration-rules.drl",
@@ -137,7 +138,7 @@ public final class RespiratoryKieSessionFactory {
         for (String[] row : readCsv("rules/templates/red-flags.template")) {
             String flagId = row[0];
             String flagType = row[1];
-            String eventCondition = row[4];
+            String eventPattern = row[4];
             String salience = row[5];
             String action = row[9];
             String explanationCode = row[11];
@@ -146,21 +147,23 @@ public final class RespiratoryKieSessionFactory {
             drl.append("rule \"TPL RED FLAG ").append(flagId).append(" ").append(flagType).append("\"\n")
                     .append("salience ").append(salience).append("\n")
                     .append("when\n")
-                    .append("    $c : ChildProfile($id : childId)\n");
-
-            if (eventCondition.contains("intakePercent")) {
-                drl.append("    HydrationIntakeEvent(childId == $id, ").append(eventCondition).append(")\n");
-            } else {
-                drl.append("    RespiratoryAssessmentEvent(childId == $id, ").append(eventCondition).append(")\n");
-            }
-
-            drl.append("    not ClinicalSignal(childId == $id, type == \"").append(explanationCode).append("\")\n")
+                    .append("    $c : ChildProfile($id : childId)\n")
+                    .append("    ").append(eventPattern).append("\n")
+                    .append("    not ClinicalSignal(childId == $id, type == \"").append(explanationCode).append("\")\n")
                     .append("then\n")
-                    .append("    insert(new ClinicalSignal($id, \"").append(explanationCode).append("\", \"").append(reason).append("\"));\n");
-            if ("EMERGENCY_RESPONSE".equals(action)) {
-                drl.append("    insert(new Recommendation($id, \"EMERGENCY_RESPONSE\", \"").append(reason).append("\"));\n");
-            }
-            drl.append("end\n\n");
+                    .append("    insert(new ClinicalSignal($id, \"").append(explanationCode).append("\", \"").append(reason).append("\"));\n")
+                    .append("end\n\n");
+
+            drl.append("rule \"TPL RED FLAG ACTION ").append(flagId).append(" ").append(flagType).append("\"\n")
+                    .append("salience ").append(salience).append("\n")
+                    .append("when\n")
+                    .append("    $c : ChildProfile($id : childId)\n")
+                    .append("    ClinicalSignal(childId == $id, type == \"").append(explanationCode).append("\")\n")
+                    .append("    eval(\"EMERGENCY_RESPONSE\".equals(\"").append(action).append("\"))\n")
+                    .append("    not Recommendation(childId == $id, action == \"EMERGENCY_RESPONSE\")\n")
+                    .append("then\n")
+                    .append("    insert(new Recommendation($id, \"EMERGENCY_RESPONSE\", \"").append(reason).append("\"));\n")
+                    .append("end\n\n");
         }
 
         return drl.toString();

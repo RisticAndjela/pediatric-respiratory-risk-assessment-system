@@ -1,0 +1,55 @@
+package rules;
+
+import com.sbnz.model.ChildProfile;
+import com.sbnz.model.SignalCategoryLink;
+
+rule "initialize signal category hierarchy"
+salience 10000
+when
+    exists ChildProfile()
+    not SignalCategoryLink()
+then
+    insert(new SignalCategoryLink("RESPIRATORY_RATE_SIGNAL", "RESPIRATORY_SIGNAL"));
+    insert(new SignalCategoryLink("OXYGEN_SIGNAL", "RESPIRATORY_SIGNAL"));
+    insert(new SignalCategoryLink("BREATHING_EFFORT_SIGNAL", "RESPIRATORY_SIGNAL"));
+    insert(new SignalCategoryLink("TEMPORAL_SIGNAL", "RESPIRATORY_SIGNAL"));
+
+    insert(new SignalCategoryLink("RR_BORDERLINE", "RESPIRATORY_RATE_SIGNAL"));
+    insert(new SignalCategoryLink("TACHYPNEA", "RESPIRATORY_RATE_SIGNAL"));
+    insert(new SignalCategoryLink("TACHYPNEA_SEVERE", "RESPIRATORY_RATE_SIGNAL"));
+
+    insert(new SignalCategoryLink("OXYGEN_MONITOR_ZONE", "OXYGEN_SIGNAL"));
+    insert(new SignalCategoryLink("HYPOXEMIA_MODERATE", "OXYGEN_SIGNAL"));
+    insert(new SignalCategoryLink("HYPOXEMIA_SEVERE", "OXYGEN_SIGNAL"));
+
+    insert(new SignalCategoryLink("BREATHING_EFFORT_MILD", "BREATHING_EFFORT_SIGNAL"));
+    insert(new SignalCategoryLink("BREATHING_EFFORT_SEVERE", "BREATHING_EFFORT_SIGNAL"));
+    insert(new SignalCategoryLink("RESP_DISTRESS_GRUNTING", "BREATHING_EFFORT_SIGNAL"));
+    insert(new SignalCategoryLink("RESP_DISTRESS_INDRAWING", "BREATHING_EFFORT_SIGNAL"));
+
+    insert(new SignalCategoryLink("RAPID_OXYGEN_DROP_2H", "TEMPORAL_SIGNAL"));
+    insert(new SignalCategoryLink("BREATHING_EFFORT_ESCALATION_6H", "TEMPORAL_SIGNAL"));
+    insert(new SignalCategoryLink("PERSISTENT_LOW_SATURATION_6H", "TEMPORAL_SIGNAL"));
+    insert(new SignalCategoryLink("PERSISTENT_TACHYPNEA_12H", "TEMPORAL_SIGNAL"));
+
+    insert(new SignalCategoryLink("FEEDING_SIGNAL", "HYDRATION_SIGNAL"));
+    insert(new SignalCategoryLink("HYDRATION_MILD", "HYDRATION_SIGNAL"));
+    insert(new SignalCategoryLink("HYDRATION_MODERATE", "HYDRATION_SIGNAL"));
+    insert(new SignalCategoryLink("HYDRATION_SEVERE", "HYDRATION_SIGNAL"));
+    insert(new SignalCategoryLink("FEEDING_REFUSAL_HIGH_RISK", "FEEDING_SIGNAL"));
+
+    insert(new SignalCategoryLink("YOUNG_CHILD_SIGNAL", "RISK_PROFILE_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_SIGNAL", "RISK_PROFILE_SIGNAL"));
+    insert(new SignalCategoryLink("RISK_PROFILE_HIGH", "YOUNG_CHILD_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_2_3_MONTHS", "AGE_BAND_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_4_5_MONTHS", "AGE_BAND_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_6_11_MONTHS", "AGE_BAND_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_12_18_MONTHS", "AGE_BAND_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_19_24_MONTHS", "AGE_BAND_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_25_36_MONTHS", "AGE_BAND_SIGNAL"));
+    insert(new SignalCategoryLink("AGE_BAND_37_60_MONTHS", "AGE_BAND_SIGNAL"));
+
+    insert(new SignalCategoryLink("RESPIRATORY_SIGNAL", "HOME_MONITORING_BLOCKER"));
+    insert(new SignalCategoryLink("HYDRATION_SIGNAL", "HOME_MONITORING_BLOCKER"));
+    insert(new SignalCategoryLink("RISK_PROFILE_HIGH", "HOME_MONITORING_BLOCKER"));
+end

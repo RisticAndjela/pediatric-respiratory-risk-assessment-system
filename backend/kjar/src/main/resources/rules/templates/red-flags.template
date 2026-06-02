@@ -1,8 +1,8 @@
-flagId,flagType,severity,clinicalContext,eventCondition,salienceLevel,riskPoints,minOccurrencesInWindow,windowMinutes,recommendedAction,mustNotifyImmediately,explanationCode,reason
-RF_01,APNEA,CRITICAL,ANY,apnea == true,10000,10,1,5,EMERGENCY_RESPONSE,true,RED_FLAG_APNEA,apnea detected
-RF_02,CENTRAL_CYANOSIS,CRITICAL,ANY,cyanosis == true,10000,10,1,5,EMERGENCY_RESPONSE,true,RED_FLAG_CYANOSIS,central cyanosis detected
-RF_03,SEVERE_HYPOXEMIA,CRITICAL,RESPIRATORY_ILLNESS,spo2 < 90,10000,10,1,5,EMERGENCY_RESPONSE,true,RED_FLAG_SEVERE_HYPOXEMIA,severe hypoxemia detected
-RF_04,SEVERE_CHEST_INDRAWING,HIGH,RESPIRATORY_ILLNESS,chestIndrawing == true,9000,7,1,30,URGENT_HOSPITAL_ASSESSMENT,true,RESP_DISTRESS_INDRAWING,chest indrawing detected
-RF_05,GRUNTING,HIGH,RESPIRATORY_ILLNESS,grunting == true,9000,7,1,30,URGENT_HOSPITAL_ASSESSMENT,true,RESP_DISTRESS_GRUNTING,grunting detected
-RF_06,PERSISTENT_LOW_SATURATION,HIGH,RESPIRATORY_ILLNESS,spo2 <= 93,8500,7,2,60,URGENT_HOSPITAL_ASSESSMENT,true,RESP_HYPOXEMIA_PERSISTENT,persistent low oxygen saturation
-RF_07,REDUCED_INTAKE_WITH_DISTRESS,MEDIUM,RESPIRATORY_ILLNESS,intakePercent < 70,7000,4,1,180,NEEDS_SAME_DAY_CLINICAL_REVIEW,false,RESP_HYDRATION_CONCERN,reduced intake with respiratory concern
+flagId,flagType,severity,clinicalContext,eventPattern,salienceLevel,riskPoints,minOccurrencesInWindow,windowMinutes,recommendedAction,mustNotifyImmediately,explanationCode,reason
+RF_01,APNEA,CRITICAL,ANY,RespiratoryAssessmentEvent(childId == $id, apnea == true),10000,10,1,5,EMERGENCY_RESPONSE,true,RED_FLAG_APNEA,apnea detected
+RF_02,CENTRAL_CYANOSIS,CRITICAL,ANY,RespiratoryAssessmentEvent(childId == $id, cyanosis == true),10000,10,1,5,EMERGENCY_RESPONSE,true,RED_FLAG_CYANOSIS,central cyanosis detected
+RF_03,SEVERE_HYPOXEMIA,CRITICAL,RESPIRATORY_ILLNESS,RespiratoryAssessmentEvent(childId == $id, spo2 < 90),10000,10,1,5,EMERGENCY_RESPONSE,true,RED_FLAG_SEVERE_HYPOXEMIA,severe hypoxemia detected
+RF_04,SEVERE_CHEST_INDRAWING,HIGH,RESPIRATORY_ILLNESS,RespiratoryAssessmentEvent(childId == $id, chestIndrawing == true),9000,7,1,30,URGENT_HOSPITAL_ASSESSMENT,true,RESP_DISTRESS_INDRAWING,chest indrawing detected
+RF_05,GRUNTING,HIGH,RESPIRATORY_ILLNESS,RespiratoryAssessmentEvent(childId == $id, grunting == true),9000,7,1,30,URGENT_HOSPITAL_ASSESSMENT,true,RESP_DISTRESS_GRUNTING,grunting detected
+RF_06,PERSISTENT_LOW_SATURATION,HIGH,RESPIRATORY_ILLNESS,RespiratoryAssessmentEvent(childId == $id, spo2 <= 93),8500,7,2,60,URGENT_HOSPITAL_ASSESSMENT,true,RESP_HYPOXEMIA_PERSISTENT,persistent low oxygen saturation
+RF_07,REDUCED_INTAKE_WITH_DISTRESS,MEDIUM,RESPIRATORY_ILLNESS,HydrationIntakeEvent(childId == $id, intakePercent < 70),7000,4,1,180,NEEDS_SAME_DAY_CLINICAL_REVIEW,false,RESP_HYDRATION_CONCERN,reduced intake with respiratory concern
